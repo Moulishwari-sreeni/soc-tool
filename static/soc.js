@@ -17,11 +17,27 @@ let totalReqs    = 0;
 // ─── CLOCK ───────────────────────────────
 function updateClock() {
   const now = new Date();
+
+  const istTime = now.toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour12: false
+  });
+
+  const istDate = now.toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  }).toUpperCase();
+
   document.getElementById('clock').textContent =
-    now.toUTCString().slice(17, 25) + ' UTC';
+    istTime + ' IST';
+
   document.getElementById('clockDate').textContent =
-    now.toDateString().toUpperCase();
+    istDate;
 }
+
 setInterval(updateClock, 1000);
 updateClock();
 
