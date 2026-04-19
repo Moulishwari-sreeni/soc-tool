@@ -10,11 +10,16 @@ from flask import Flask, request, jsonify, render_template, send_file
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import logging
-
+import requests
+import smtplib
+from email.mime.text import MIMEText
+from flask import session, redirect, url_for
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("SOC")
 
 app = Flask(__name__)
+USERNAME = "socteam"
+PASSWORD = "socteam123"
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'tomato-soc-secret-2024')
 CORS(app, origins="*")
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
@@ -215,11 +220,29 @@ def generate_pcap(logs: list) -> bytes:
 
     return bytes(records)
 
-# ─────────────────────────────────────────────
+# ─────────────────────
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if username == USERNAME and password == PASSWORD:
+            session["logged_in"] = True
+            return redirect(url_for("dashboard"))
+        else:
+            return render_template("login.html", error="Invalid credentials")
+
+    return render_template("login.html")
+#────────────────────────
 #  ROUTES
 # ─────────────────────────────────────────────
 @app.route("/")
 def dashboard():
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
+
     return render_template("dashboard.html")
 
 
@@ -266,6 +289,10 @@ def ingest():
     if do_block:
         block_ip(ip, reason)
         entry["blocked"] = True
+
+ # 🔔 SEND ALERTS
+        send_telegram_alert(ip, reason, entry["severity"])
+        send_email_alert(ip, reason, entry["severity"])
 
     # Update counters
     for t in threats:
@@ -445,6 +472,50 @@ def on_connect():
 @socketio.on("disconnect")
 def on_disconnect():
     pass
+
+# ─────────────────────────────
+# ALERT SYSTEM
+# ─────────────────────────────
+
+def send_telegram_alert(ip, threat, severity):
+    TOKEN = "YOUR_BOT_TOKEN"
+    CHAT_ID = "YOUR_CHAT_ID"
+
+    msg = f"🚨 SOC ALERT\nIP: {ip}\nThreat: {threat}\nSeverity: {severity}"
+
+    try:
+        requests.get(
+            f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+            params={"chat_id": CHAT_ID, "text": msg}
+        )
+    except Exception as e:
+        log.error(f"Telegram alert failed: {e}")
+
+
+def send_email_alert(ip, threat, severity):
+    sender = "your_email@gmail.com"
+    password = "your_app_password"
+
+    msg = MIMEText(f"""
+🚨 SOC ALERT
+
+IP: {ip}
+Threat: {threat}
+Severity: {severity}
+""")
+
+    msg["Subject"] = "SOC ALERT"
+    msg["From"] = sender
+    msg["To"] = sender
+
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(sender, password)
+        server.send_message(msg)
+        server.quit()
+    except Exception as e:
+        log.error(f"Email alert failed: {e}")
 
 
 if __name__ == "__main__":
