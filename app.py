@@ -1,17 +1,14 @@
-"""
-Tomato SOC Analyzer — Security Operations Center Backend
-Flask + SocketIO | Real-time detection, IP blocking, PCAP export
-"""
+import eventlet
+eventlet.monkey_patch()
 
 import os, re, json, time, struct, socket, threading
 from datetime import datetime, timedelta
-from collections import defaultdict
+from collections import defaultdict, Counter
 from flask import Flask, request, jsonify, render_template, send_file
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import logging
-import requests
-import smtplib
+import requestsimport smtplib
 from email.mime.text import MIMEText
 from flask import session, redirect, url_for
 logging.basicConfig(level=logging.INFO)
@@ -22,7 +19,7 @@ USERNAME = "socteam"
 PASSWORD = "socteam123"
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'tomato-soc-secret-2024')
 CORS(app, origins="*")
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # ─────────────────────────────────────────────
 #  IN-MEMORY STORE  (replace with Redis/DB for production)
