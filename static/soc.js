@@ -3,7 +3,10 @@
    SocketIO • Chart.js • Real-time updates
 ═══════════════════════════════════════════ */
 
-const socket = io({ transports: ['websocket', 'polling'] });
+const socket = io({
+  transports: ['polling'],
+  upgrade: false
+});
 
 // ─── STATE ───────────────────────────────
 let allLogs      = [];   // all received logs (newest first)
@@ -43,6 +46,7 @@ updateClock();
 
 // ─── SOCKETIO EVENTS ─────────────────────
 socket.on('connect', () => {
+  console.log("✅ CONNECTED TO SOC");
   document.getElementById('statusPill').className = 'status-pill';
   document.getElementById('statusPill').innerHTML = '<span class="pulse-dot"></span><span>CONNECTED</span>';
 });
