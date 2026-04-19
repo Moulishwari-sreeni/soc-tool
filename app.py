@@ -480,8 +480,8 @@ def on_disconnect():
 # ─────────────────────────────
 
 def send_telegram_alert(ip, threat, severity):
-    TOKEN = "YOUR_BOT_TOKEN"
-    CHAT_ID = "YOUR_CHAT_ID"
+    TOKEN = "AAERHL_5jamJk55HLzX8QgQ5ZpwZ9GxcCFY"
+    CHAT_ID = "8458458404"
 
     msg = f"🚨 SOC ALERT\nIP: {ip}\nThreat: {threat}\nSeverity: {severity}"
 
