@@ -8,7 +8,8 @@ from flask import Flask, request, jsonify, render_template, send_file
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import logging
-import requestsimport smtplib
+import requests
+import smtplib
 from email.mime.text import MIMEText
 from flask import session, redirect, url_for
 logging.basicConfig(level=logging.INFO)
